@@ -20,5 +20,9 @@
   ],
   "peerDependencies": {
     "karma": ">=0.9"
+  },
+  "dependencies": {
+    "benchmark": "^2.1.4",
+    "sanitize-filename": "^1.6.1"
   }
 }
