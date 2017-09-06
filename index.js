@@ -10,10 +10,11 @@ var BenchReporter = function(baseReporterDecorator, config, logger, formatError)
   var excludeFromFastest = options.exclude || [];
   var destDir  = options.destDir || path.resolve(process.cwd(), 'results');
   var self = this;
-  var log = logger.create('benchmark');
+  var log = logger.create('reporter');
+  var resolveLibName = options.resolveLibName || function(name) { return name; };
 
   this.onRunComplete = function(browsers, resultInfo) {
-    var relativeResultSaver = new RelativeResultSaver(destDir);
+    var relativeResultSaver = new RelativeResultSaver(destDir, resolveLibName);
     for (var browserName in resultSet) {
       var suites = resultSet[browserName];
 
