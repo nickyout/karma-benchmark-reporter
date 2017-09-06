@@ -2,14 +2,15 @@ var RelativeResultSaver = require('./lib/relative-result-saver');
 var resultToRelativeResult = require('./lib/result-to-relative-result');
 var path = require('path');
 
-var BenchReporter = function(baseReporterDecorator, config) {
+var BenchReporter = function(baseReporterDecorator, config, logger, formatError) {
   baseReporterDecorator(this);
 
   var resultSet = {};
-  var options = config.benchmarkReporter || {};
-  var excludeFromFastest = options.excludeFromFastest || [];
+  var options = config || {};
+  var excludeFromFastest = options.exclude || [];
   var destDir  = options.destDir || path.resolve(process.cwd(), 'results');
   var self = this;
+  var log = logger.create('benchmark');
 
   this.onRunComplete = function(browsers, resultInfo) {
     var relativeResultSaver = new RelativeResultSaver(destDir);
@@ -53,10 +54,10 @@ var BenchReporter = function(baseReporterDecorator, config) {
     // Save all results to disk
     relativeResultSaver.flush(results)
       .then(function() {
-        self.write(results.length + " files written to disk");
+        log.info(results.length + " files written to disk\n");
       })
       .catch(function(err) {
-        self.write('Writing files failed: ', err);
+        log.error('Writing files failed: ' + formatError(err));
       });
   };
 
@@ -74,7 +75,7 @@ var BenchReporter = function(baseReporterDecorator, config) {
   };
 };
 
-BenchReporter.$inject = ['baseReporterDecorator'];
+BenchReporter.$inject = ['baseReporterDecorator', 'config.benchmarkReporter', 'logger', 'formatError'];
 
 module.exports = {
   'reporter:benchmark': ['type', BenchReporter]
