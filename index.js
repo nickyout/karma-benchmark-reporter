@@ -3,6 +3,22 @@ var MockSaver = require('./lib/mock-saver');
 var resultToRelativeResult = require('./lib/result-to-relative-result');
 var path = require('path');
 
+function toStringStyle(style) {
+	if (style === "benchmark") {
+		return function(bench) {
+			// Partially from Benchmark#toString
+			var hz = bench.hz;
+			var stats = bench.stats;
+			var size = stats.sample.length;
+			return bench.name + ' x ' + Math.round(bench.hz) + ' ops/sec \xb1' + stats.rme.toFixed(2) + '% (' + size + ' run' + (size == 1 ? '' : 's') + ' sampled)\n';
+		}
+	} else {
+		return function(benchmark) {
+			return benchmark.name+' at '+Math.floor(benchmark.hz)+' ops/sec\n';
+		}
+	}
+}
+
 var BenchReporter = function(baseReporterDecorator, basePath, config, logger, formatError) {
   baseReporterDecorator(this);
 
@@ -10,6 +26,7 @@ var BenchReporter = function(baseReporterDecorator, basePath, config, logger, fo
   var options = config || {};
   var excludeFromFastest = options.exclude || [];
   var log = logger.create('reporter');
+	var toStringBench = toStringStyle(options.logStyle || 'jsperf');
 
   var resolveName = options.resolveName || function(name) { return name; };
 	var destDir = options.destDir && path.resolve(basePath, options.destDir);
@@ -54,10 +71,10 @@ var BenchReporter = function(baseReporterDecorator, basePath, config, logger, fo
     }
 		// Save all results to disk
 		saver.flush(results)
-			.then(function(output) {
-				if (output.length) {
-					log.info(output.length + " files written to disk\n");
-				}
+			.then(function(filePaths) {
+				filePaths.forEach(function(filePath) {
+					log.info("Written to " + filePath + "\n");
+				});
 			})
 			.catch(function(err) {
 				log.error('Writing files failed: ' + formatError(err));
@@ -67,14 +84,16 @@ var BenchReporter = function(baseReporterDecorator, basePath, config, logger, fo
   this.specSuccess = function(browser, result) {
     var browserName = browser.name;
     var suiteName = result.benchmark.suite;
-    var benchName = resolveName(result.benchmark.name);
+		var benchClone = Object.assign({}, result.benchmark);
 
     // Get set and store results
     var browserSet = resultSet[browserName] = resultSet[browserName] || {};
     browserSet[suiteName] = browserSet[suiteName] || [];
     browserSet[suiteName].push(result);
 
-    this.write(browserName+'  '+suiteName+': '+benchName+' at '+Math.floor(result.benchmark.hz)+' ops/sec\n');
+		benchClone.name = resolveName(result.benchmark.name);
+
+		this.write(browserName+'  '+suiteName+': '+toStringBench(benchClone));
   };
 };
 

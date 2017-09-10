@@ -82,9 +82,37 @@ _optional_
 Format the benchmark names before they are displayed or stored. For instance, if you automatically want
 the benchmark to be suffixed by the version number, you could do it with this.
 
+#### benchmarkReporter.logStyle
+_type: "jsperf"|"benchmark"_
+_optional_
+_default: "jsperf"_
+
+Display log results in the command line the original karma-benchmark-reporter way reported as 'jsperf style'
+or as 'benchmark style'. Basically, if you care about relative margin of error and number of samples,
+set this to `"benchmark"`.
+
+## What to do when the winner changes a lot
+
 ## Possible questions
 
-### Why relative test result format?
+### Why (±x.yy%) matters
+
+This value is a fairly simple indicator of how reliable a test result really is. It is the relative margin of error,
+which means the percentage the number of ops/sec that the benchmark reported could differ from the truth.
+If you notice that the winner of your tests differs a lot, this value is probably too high for your case.
+You can increase the accuracy by increasing the number of samples of a benchmark, like so:
+
+```
+suite('my suite', function() {
+	benchmark('my benchmark', function() {
+		...
+	}, { minSamples: 60 });
+});
+```
+
+You want to do it for every benchmark? Then... do this for every benchmark!
+
+### Why relative test result format
 
 The benchmark is supposed to find the fastest way to execute a particular action, and preferably see how much
 faster it is compared to its competitors. Running a benchmark test can give a result for a particular browser
@@ -100,4 +128,4 @@ that did complete, so eventually the problem would get isolated to a specific br
 would eventually be available. In order to extract any meaning from these benchmark results, they would have to be
 interpreted in relation to the other benchmarks on the same machine.
 
-Therefore, each benchmark suite overwrites the previous one, and its contents are all relative. 
+Therefore, each benchmark suite overwrites the previous one, and its contents are all relative.
