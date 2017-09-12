@@ -28,7 +28,7 @@ var BenchReporter = function(baseReporterDecorator, basePath, config, logger, fo
   var log = logger.create('reporter');
 	var toStringBench = toStringStyle(options.logStyle || 'jsperf');
 
-  var resolveName = options.resolveName || function(name) { return name; };
+  var resolveName = options.resolveName || function(name, suiteName) { return name; };
 	var destDir = options.destDir && path.resolve(basePath, options.destDir);
 	var saver = destDir ? new RelativeResultSaver(destDir, resolveName) : new MockSaver();
 
@@ -54,7 +54,7 @@ var BenchReporter = function(baseReporterDecorator, basePath, config, logger, fo
 
           // classic result
           var timesFaster = (fastest.benchmark.hz/secondFastest.benchmark.hz).toFixed(2);
-          this.write('  '+fastest.benchmark.suite+': '+resolveName(fastest.benchmark.name)+' at '+Math.floor(fastest.benchmark.hz)+' ops/sec ('+timesFaster+'x faster than '+resolveName(secondFastest.benchmark.name)+')\n');
+          this.write('  '+fastest.benchmark.suite+': '+resolveName(fastest.benchmark.name, suiteName)+' at '+Math.floor(fastest.benchmark.hz)+' ops/sec ('+timesFaster+'x faster than '+resolveName(secondFastest.benchmark.name, suiteName)+')\n');
         }
         else {
           this.write('  '+results[0].description+' had no peers for comparison at '+Math.floor(results[0].benchmark.hz)+' ops/sec\n')
@@ -73,7 +73,7 @@ var BenchReporter = function(baseReporterDecorator, basePath, config, logger, fo
 		saver.flush(results)
 			.then(function(filePaths) {
 				filePaths.forEach(function(filePath) {
-					log.info("Written to " + filePath + "\n");
+					log.info("Written to " + filePath);
 				});
 			})
 			.catch(function(err) {
@@ -91,7 +91,7 @@ var BenchReporter = function(baseReporterDecorator, basePath, config, logger, fo
     browserSet[suiteName] = browserSet[suiteName] || [];
     browserSet[suiteName].push(result);
 
-		benchClone.name = resolveName(result.benchmark.name);
+		benchClone.name = resolveName(result.benchmark.name, suiteName);
 
 		this.write(browserName+'  '+suiteName+': '+toStringBench(benchClone));
   };
